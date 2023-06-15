@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restapi
+  labels:
+    app: restapi
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: restapi
+  template:
+    metadata:
+      labels:
+        app: restapi
+    spec:
+      containers:
+      - name: library
+        image: shahidulaes/library_viveksingh:0.1.0
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: restapi-configmap
+              key: host
+        - name: DB_PASS
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: mysql-root-password
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: restapi-configmap
+              key: dbuser
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: restapi-configmap
+              key: dbname
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: restapi-service
+spec:
+  selector:
+    app: restapi
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30000
